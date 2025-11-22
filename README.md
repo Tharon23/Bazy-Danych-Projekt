@@ -10,6 +10,118 @@ Celem projektu jest usprawnienie pracy warsztatu poprzez cyfryzację kluczowych 
 * **Automatyczne zarządzanie stanem magazynowym** (Triggery).
 * Generowanie raportów finansowych i rankingów efektywności.
 
+## 📊 Schemat Bazy Danych (ERD)
+```mermaid
+erDiagram
+    KLIENCI ||--|{ POJAZDY : posiada
+    POJAZDY ||--|{ ZLECENIA : ma
+    POJAZDY ||--|{ PRZEGLADY : przechodzi
+    MECHANICY ||--|{ ZLECENIA : realizuje
+
+    ZLECENIA ||--|{ USLUGI_ZLECENIA : zawiera
+    ZLECENIA ||--|{ CZESCI_ZLECENIA : zawiera
+    USLUGI ||--|{ USLUGI_ZLECENIA : jest_w
+    CZESCI ||--|{ CZESCI_ZLECENIA : jest_w
+
+    ZLECENIA ||--|| PLATNOSCI : generuje
+    PLATNOSCI ||--|| FAKTURY : dokumentuje
+
+    %% Tabela KLIENCI
+    KLIENCI {
+        int id_klienta PK
+        string imie
+        string nazwisko
+        string telefon
+        string email
+    }
+
+    %% Tabela POJAZDY
+    POJAZDY {
+        int id_pojazdu PK
+        int id_klienta FK
+        string marka
+        string model
+        string vin
+    }
+
+    %% Tabela ZLECENIA
+    ZLECENIA {
+        int id_zlecenia PK
+        int id_pojazdu FK
+        int id_mechanika FK
+        string status
+        date data_przyjecia
+    }
+
+    %% Tabela MECHANICY
+    MECHANICY {
+        int id_mechanika PK
+        string imie
+        string nazwisko
+        string specjalizacja
+    }
+
+    %% Tabela CZESCI (Magazyn)
+    CZESCI {
+        int id_czesci PK
+        string nazwa
+        numeric cena
+        numeric ilosc_na_stanie
+    }
+
+    %% Tabela USLUGI (Cennik)
+    USLUGI {
+        int id_uslugi PK
+        string nazwa
+        numeric cena
+    }
+
+    %% Tabela PRZEGLADY (Przywrocona)
+    PRZEGLADY {
+        int id_przegladu PK
+        int id_pojazdu FK
+        date data_przegladu
+        string wynik
+    }
+
+    %% Tabela PLATNOSCI
+    PLATNOSCI {
+        int id_platnosci PK
+        int id_zlecenia FK
+        numeric kwota
+        string sposob
+    }
+
+    %% Tabela FAKTURY
+    FAKTURY {
+        int id_faktury PK
+        int id_platnosci FK
+        numeric kwota_brutto
+    }
+
+    %% TABELE LACZACE
+    USLUGI_ZLECENIA {
+        int id_zlecenia FK
+        int id_uslugi FK
+        int ilosc
+    }
+
+    CZESCI_ZLECENIA {
+        int id_zlecenia FK
+        int id_czesci FK
+        int ilosc
+    }
+
+    %% NOWA TABELA (Logi) - stoi obok, bez relacji
+    LOGI_ZMIAN_CEN {
+        int id_logu PK
+        string nazwa_uslugi
+        numeric stara_cena
+        numeric nowa_cena
+        timestamp data_zmiany
+    }
+```
+
 ## 🛠 Technologie
 * **Baza danych:** PostgreSQL 16/17
 * **Język:** SQL (PL/pgSQL)
