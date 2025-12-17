@@ -1,6 +1,6 @@
 # 🚗 System Zarządzania Warsztatem Samochodowym
 
-Projekt relacyjnej bazy danych stworzony w PostgreSQL, wspierający obsługę warsztatu samochodowego. System obsługuje procesy od przyjęcia klienta, przez naprawę, zarządzanie magazynem części, aż po fakturowanie.
+Projekt relacyjnej bazy danych wspierający obsługę warsztatu samochodowego. Projekt łączy zaawansowaną logikę w bazie danych PostgreSQL (Triggery, Procedury) z aplikacją webową (React + Node.js).
 
 ## 📋 O projekcie
 
@@ -8,6 +8,7 @@ Celem projektu jest usprawnienie pracy warsztatu poprzez cyfryzację kluczowych 
 * Zarządzanie bazą klientów i historią ich pojazdów.
 * Monitorowanie zleceń naprawy i statusów pracy mechaników.
 * **Automatyczne zarządzanie stanem magazynowym** (Triggery).
+* **Symulację ról użytkowników** (Kierownik, Recepcja, Mechanik) w aplikacji.
 * Generowanie raportów finansowych i rankingów efektywności.
 
 ## 📊 Schemat Bazy Danych (ERD)
@@ -124,19 +125,14 @@ erDiagram
 
 ## 🛠 Technologie
 * **Baza danych:** PostgreSQL 16/17
-* **Język:** SQL (PL/pgSQL)
+* **Backend:** Node.js + Express
+* **Frontend:** React + Vite
+* **Komunikacja:** Axios + pg (node-postgres)
 * **Narzędzia:** Visual Studio Code, Git
 
-## 🚀 Jak uruchomić projekt?
+## 🚀 Instalacja i Uruchomienie
 
-Kod SQL został podzielony na moduły dla łatwiejszego wdrożenia. Uruchom pliki w następującej kolejności:
-
-1.  `01_schema.sql` - Tworzy strukturę tabel (Klienci, Pojazdy, Zlecenia, itd.).
-2.  `02_constraints.sql` - Dodaje klucze obce i relacje między tabelami.
-3.  `03_views.sql` - Tworzy widoki analityczne (np. ranking mechaników).
-4.  `04_functions_triggers.sql` - Wgrywa logikę biznesową (automatyzacja magazynu).
-5.  `05_roles.sql` - Konfiguruje uprawnienia użytkowników.
-6.  `06_seed_data.sql` - Wypełnia bazę przykładowymi danymi testowymi.
+Pełna instrukcja instalacji środowiska znajduje się w pliku: 👉 **[INSTALL.md](./INSTALL.md)**
 
 ## 💡 Kluczowe funkcjonalności (SQL)
 
@@ -151,4 +147,4 @@ System posiada trigger `aktualizuj_stan_magazynu`, który automatycznie zdejmuje
 Zaimplementowano procedury takie jak `zakoncz_zlecenie`, która automatycznie zamyka zlecenie i ustawia datę finalizacji.
 
 ---
-*Projekt wykonany w ramach przedmiotu Bazy Danych.*
+*Projekt wykonany w ramach przedmiotu Bazy Danych. Autorzy: Tharon23, ultimus12*
