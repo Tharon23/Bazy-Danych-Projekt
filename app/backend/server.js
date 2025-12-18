@@ -156,11 +156,40 @@ app.patch('/api/orders/:id', async (req, res) => {
         [status, randomKoszt, id]
       );
     } else {
-      // Zwykła zmiana statusu
+      // Logic for Mechanic Availability Check
+      if (status === 'W trakcie') {
+        // Get the mechanic assigned to this order
+        const orderRes = await pool.query("SELECT id_mechanika FROM zlecenia WHERE id_zlecenia = $1", [id]);
+        if (orderRes.rows.length > 0) {
+          const mechId = orderRes.rows[0].id_mechanika;
+          // Check if mechanic has OTHER active orders (W trakcie)
+          const busyCheck = await pool.query(
+            "SELECT COUNT(*) FROM zlecenia WHERE id_mechanika = $1 AND status = 'W trakcie' AND id_zlecenia != $2",
+            [mechId, id]
+          );
+
+          if (parseInt(busyCheck.rows[0].count) > 0) {
+            return res.status(409).json({ error: "Ten mechanik realizuje już inne zlecenie w tym momencie!" });
+          }
+        }
+      }
+
       await pool.query("UPDATE zlecenia SET status = $1 WHERE id_zlecenia = $2", [status, id]);
     }
 
     res.json({ message: "Status zaktualizowany" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+});
+
+// 8. Restock Inventory (PATCH)
+app.patch('/api/inventory/:id/restock', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query("UPDATE czesci SET ilosc_na_stanie = ilosc_na_stanie + 50 WHERE id_czesci = $1", [id]);
+    res.json({ message: "Zamówiono towar (+50 szt.)" });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");

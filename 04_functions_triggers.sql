@@ -69,3 +69,97 @@ BEGIN
     RAISE NOTICE 'Zlecenie % zostalo pomyslnie zakonczone.', p_id_zlecenia;
 END;
 $$;
+
+
+-- Funkcja 4: Oblicza całkowity koszt zlecenia (części + usługi + robocizna)
+CREATE OR REPLACE FUNCTION oblicz_koszt_zlecenia(p_id_zlecenia integer) RETURNS numeric
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_koszt_czesci numeric DEFAULT 0;
+    v_koszt_uslug numeric DEFAULT 0;
+    v_koszt_robocizny numeric DEFAULT 0;
+BEGIN
+    -- Suma kosztów części
+    SELECT COALESCE(SUM(c.cena * cz.ilosc), 0) INTO v_koszt_czesci
+    FROM czesci_zlecenia cz
+    JOIN czesci c ON cz.id_czesci = c.id_czesci
+    WHERE cz.id_zlecenia = p_id_zlecenia;
+
+    -- Suma kosztów usług (uwzględniając rabat)
+    SELECT COALESCE(SUM(u.cena * uz.ilosc * (1 - uz.rabat / 100.0)), 0) INTO v_koszt_uslug
+    FROM uslugi_zlecenia uz
+    JOIN uslugi u ON uz.id_uslugi = u.id_uslugi
+    WHERE uz.id_zlecenia = p_id_zlecenia;
+
+    -- Koszt robocizny (z tabeli zlecenia)
+    SELECT COALESCE(koszt_robocizny, 0) INTO v_koszt_robocizny
+    FROM zlecenia
+    WHERE id_zlecenia = p_id_zlecenia;
+
+    RETURN v_koszt_czesci + v_koszt_uslug + v_koszt_robocizny;
+END;
+$$;
+
+-- Funkcja 5 (do Triggera): Blokuje modyfikację części/usług dla zakończonych zleceń
+CREATE OR REPLACE FUNCTION zablokuj_modyfikacje_zakonczonych() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_status varchar;
+BEGIN
+    -- Sprawdź status zlecenia (w zależności od tabeli, ID zlecenia jest w NEW lub OLD)
+    IF (TG_OP = 'DELETE') THEN
+        SELECT status INTO v_status FROM zlecenia WHERE id_zlecenia = OLD.id_zlecenia;
+    ELSE
+        SELECT status INTO v_status FROM zlecenia WHERE id_zlecenia = NEW.id_zlecenia;
+    END IF;
+
+    IF v_status IN ('Zakonczone', 'Anulowane') THEN
+        RAISE EXCEPTION 'Nie mozna modyfikowac elementow zlecenia o statusie: %', v_status;
+    END IF;
+
+    IF (TG_OP = 'DELETE') THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trigger_blokada_czesci
+BEFORE INSERT OR UPDATE OR DELETE ON czesci_zlecenia
+FOR EACH ROW EXECUTE FUNCTION zablokuj_modyfikacje_zakonczonych();
+
+CREATE TRIGGER trigger_blokada_uslug
+BEFORE INSERT OR UPDATE OR DELETE ON uslugi_zlecenia
+FOR EACH ROW EXECUTE FUNCTION zablokuj_modyfikacje_zakonczonych();
+
+
+-- NOWE PROCEDURY (DODANE)
+
+-- Procedura 2: Dodaje nowego klienta i od razu przypisuje mu pojazd (Transakcja)
+CREATE OR REPLACE PROCEDURE dodaj_klienta_z_pojazdem(
+    IN p_imie varchar, 
+    IN p_nazwisko varchar, 
+    IN p_telefon varchar, 
+    IN p_email varchar,
+    IN p_marka varchar,
+    IN p_model varchar,
+    IN p_rok int,
+    IN p_nr_rejestracyjny varchar,
+    IN p_vin varchar
+)
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_nowe_id_klienta int;
+BEGIN
+    -- Dodaj klienta
+    INSERT INTO klienci (imie, nazwisko, telefon, email)
+    VALUES (p_imie, p_nazwisko, p_telefon, p_email)
+    RETURNING id_klienta INTO v_nowe_id_klienta;
+
+    -- Dodaj pojazd dla tego klienta
+    INSERT INTO pojazdy (id_klienta, marka, model, rok, nr_rejestracyjny, vin)
+    VALUES (v_nowe_id_klienta, p_marka, p_model, p_rok, p_nr_rejestracyjny, p_vin);
+
+    RAISE NOTICE 'Dodano klienta % % oraz pojazd % %.', p_imie, p_nazwisko, p_marka, p_model;
+END;
+$$;

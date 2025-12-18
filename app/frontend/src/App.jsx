@@ -63,7 +63,21 @@ function App() {
       // Optimistic update or refresh
       fetchData();
     } catch (err) {
-      alert("Błąd aktualizacji statusu");
+      if (err.response && err.response.status === 409) {
+        alert(err.response.data.error);
+      } else {
+        alert("Błąd aktualizacji statusu");
+      }
+    }
+  };
+
+  const handleRestock = async (id, nazwa) => {
+    try {
+      await axios.patch(`${API_URL}/inventory/${id}/restock`);
+      alert(`Zamówiono dostawę dla: ${nazwa}`);
+      fetchData();
+    } catch (err) {
+      alert("Błąd podczas zamawiania towaru.");
     }
   };
 
@@ -237,7 +251,7 @@ function App() {
                           padding: '0.25rem 0.75rem', fontSize: '0.8rem',
                           background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa',
                           border: 'none', borderRadius: '4px', cursor: 'pointer'
-                        }} onClick={() => alert(`Zamówiono: ${item.nazwa}`)}>
+                        }} onClick={() => handleRestock(item.id_czesci, item.nazwa)}>
                           Zamów
                         </button>
                       </td>
