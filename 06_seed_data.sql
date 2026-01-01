@@ -6,10 +6,10 @@ INSERT INTO klienci (imie, nazwisko, telefon, email, adres) VALUES
 
 -- Pojazdy
 INSERT INTO pojazdy (id_klienta, marka, model, rok, nr_rejestracyjny, vin) VALUES
-(1, 'Toyota', 'Corolla', 2015, 'WA 11111', 'VIN1111111111'),
-(1, 'Fiat', 'Panda', 2010, 'WA 22222', 'VIN2222222222'),
-(2, 'Honda', 'Civic', 2018, 'KR 33333', 'VIN3333333333'),
-(3, 'BMW', 'X5', 2020, 'EL 44444', 'VIN4444444444');
+(1, 'Toyota', 'Corolla', 2015, 'WA 11111', 'VIN11111111110000'),
+(1, 'Fiat', 'Panda', 2010, 'WA 22222', 'VIN22222222220000'),
+(2, 'Honda', 'Civic', 2018, 'KR 33333', 'VIN33333333330000'),
+(3, 'BMW', 'X5', 2020, 'EL 44444', 'VIN44444444440000');
 
 -- Mechanicy
 INSERT INTO mechanicy (imie, nazwisko, specjalizacja, telefon, stawka_godzinowa) VALUES
