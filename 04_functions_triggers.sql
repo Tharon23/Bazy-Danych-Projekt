@@ -26,7 +26,8 @@ BEGIN
     END IF;
 
     UPDATE czesci
-    SET ilosc_na_stanie = ilosc_na_stanie - NEW.ilosc
+    SET ilosc_na_stanie = ilosc_na_stanie - NEW.ilosc,
+        updated_at = CURRENT_TIMESTAMP
     WHERE id_czesci = NEW.id_czesci;
 
     RETURN NEW;
@@ -63,7 +64,8 @@ BEGIN
 
     UPDATE zlecenia
     SET status = 'Zakonczone',
-        data_zakonczenia = CURRENT_TIMESTAMP
+        data_zakonczenia = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
     WHERE id_zlecenia = p_id_zlecenia;
     
     RAISE NOTICE 'Zlecenie % zostalo pomyslnie zakonczone.', p_id_zlecenia;
@@ -163,3 +165,27 @@ BEGIN
     RAISE NOTICE 'Dodano klienta % % oraz pojazd % %.', p_imie, p_nazwisko, p_marka, p_model;
 END;
 $$;
+
+
+-- ==========================================
+-- NOWOŚĆ: Automatyczna aktualizacja updated_at
+-- ==========================================
+
+-- Uniwersalna funkcja do triggerów
+CREATE OR REPLACE FUNCTION update_timestamp_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Triggery dla wszystkich głównych tabel
+CREATE TRIGGER update_klienci_timestamp BEFORE UPDATE ON klienci FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
+CREATE TRIGGER update_pojazdy_timestamp BEFORE UPDATE ON pojazdy FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
+CREATE TRIGGER update_mechanicy_timestamp BEFORE UPDATE ON mechanicy FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
+CREATE TRIGGER update_uslugi_timestamp BEFORE UPDATE ON uslugi FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
+CREATE TRIGGER update_czesci_timestamp BEFORE UPDATE ON czesci FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
+CREATE TRIGGER update_zlecenia_timestamp BEFORE UPDATE ON zlecenia FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
+CREATE TRIGGER update_platnosci_timestamp BEFORE UPDATE ON platnosci FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
+CREATE TRIGGER update_faktury_timestamp BEFORE UPDATE ON faktury FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
