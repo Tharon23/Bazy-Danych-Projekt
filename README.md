@@ -147,4 +147,4 @@ System posiada trigger `aktualizuj_stan_magazynu`, który automatycznie zdejmuje
 Zaimplementowano procedury takie jak `zakoncz_zlecenie`, która automatycznie zamyka zlecenie i ustawia datę finalizacji.
 
 ---
-*Projekt wykonany w ramach przedmiotu Bazy Danych. Autorzy: Tharon23, ultimus12*
+*Projekt wykonany w ramach przedmiotu Bazy Danych. Autorzy: Kamil Szkarłat, Maciej Popławski*
