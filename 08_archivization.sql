@@ -1,5 +1,6 @@
--- 1. TABELA HISTORYCZNA (ARCHIWUM)
--- Tutaj trafią usunięte zlecenia. Ma te same kolumny co 'zlecenia' + data usunięcia.
+-- Mechanizmy archiwizacji danych i raporty historyczne
+
+-- 1. Tabela archiwalna (Shadow Table)
 CREATE TABLE zlecenia_archiwum (
     id_archiwum SERIAL PRIMARY KEY,
     id_zlecenia_org INTEGER,
@@ -14,11 +15,10 @@ CREATE TABLE zlecenia_archiwum (
     kto_usunal VARCHAR(100)
 );
 
--- 2. FUNKCJA DO TRIGGERA ARCHIWIZUJĄCEGO
+-- 2. Funkcja archiwizująca
 CREATE OR REPLACE FUNCTION archiwizuj_zlecenie()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Przepisujemy dane usuwanego wiersza (OLD) do archiwum
     INSERT INTO zlecenia_archiwum (
         id_zlecenia_org, id_pojazdu, id_mechanika, data_przyjecia, 
         data_zakonczenia, status, opis, koszt_robocizny, kto_usunal
@@ -31,14 +31,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 3. TRIGGER (URUCHAMIA SIĘ PRZED USUNIĘCIEM)
+-- 3. Trigger Soft-Delete
 CREATE TRIGGER trigger_archiwizacja_zlecenia
 BEFORE DELETE ON zlecenia
 FOR EACH ROW EXECUTE FUNCTION archiwizuj_zlecenie();
 
 
--- 4. FUNKCJA RAPORTOWA: MIESIĘCZNE ZYSKI
--- Oblicza sumę z robocizny + zysk z części (zakładamy, że sprzedajemy je drożej niż kupujemy, ale tu policzymy sam obrót)
+-- 4. Funkcja raportowa (Miesięczne wyniki finansowe)
 CREATE OR REPLACE FUNCTION raport_miesieczny(p_miesiac INT, p_rok INT)
 RETURNS TABLE (
     miesiac INT,
